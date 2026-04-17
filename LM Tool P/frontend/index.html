@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Parama AI</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: white;
+}
+
+.container {
+    width: 500px;
+    margin: auto;
+    margin-top: 80px;
+    padding: 30px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    text-align: center;
+    animation: fadeIn 1s ease;
+}
+
+h1 {
+    font-size: 28px;
+}
+
+.subtitle {
+    font-size: 14px;
+    opacity: 0.7;
+    margin-bottom: 20px;
+}
+
+input, button {
+    width: 100%;
+    margin-top: 15px;
+}
+
+button {
+    padding: 12px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    transform: scale(1.05);
+}
+
+.loader {
+    margin-top: 20px;
+    display: none;
+}
+
+.result {
+    margin-top: 20px;
+    text-align: left;
+    white-space: pre-wrap;
+    border-left: 3px solid #6366f1;
+    padding-left: 15px;
+}
+
+@keyframes fadeIn {
+    from {opacity:0; transform: translateY(20px);}
+    to {opacity:1; transform: translateY(0);}
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>Parama AI</h1>
+    <div class="subtitle">Upload any document. Get intelligence instantly.</div>
+
+    <input type="file" id="file">
+    <button onclick="upload()">Analyze</button>
+
+    <div class="loader" id="loader">Analyzing with AI...</div>
+    <div class="result" id="result"></div>
+
+    <!-- 🔥 Q&A SECTION -->
+    <input type="text" id="question" placeholder="Ask something about the document...">
+    <button onclick="askQuestion()">Ask</button>
+
+    <div class="result" id="answer"></div>
+</div>
+
+<script>
+
+// 📤 Upload PDF
+async function upload() {
+    let file = document.getElementById("file").files[0];
+    let formData = new FormData();
+    formData.append("file", file);
+
+    document.getElementById("loader").style.display = "block";
+
+    let res = await fetch("http://127.0.0.1:5000/upload", {
+        method: "POST",
+        body: formData
+    });
+
+    let data = await res.json();
+
+    document.getElementById("loader").style.display = "none";
+
+    typeEffect(data.analysis, "result");
+}
+
+
+async function askQuestion() {
+    let question = document.getElementById("question").value;
+
+    if (!question) {
+        alert("Ask something bro");
+        return;
+    }
+
+    let res = await fetch("http://127.0.0.1:5000/ask", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ question: question })
+    });
+
+    let data = await res.json();
+
+    typeEffect(data.answer, "answer");
+}
+
+// 🔥 Typing Animation (Reusable)
+function typeEffect(text, elementId) {
+    let div = document.getElementById(elementId);
+    div.innerHTML = "";
+
+    let i = 0;
+
+    function typing() {
+        if (i < text.length) {
+            div.innerHTML += text.charAt(i).replace(/\n/g, "<br>");
+            i++;
+            setTimeout(typing, 15);
+        }
+    }
+
+    typing();
+}
+
+</script>
+
+</body>
+</html>
